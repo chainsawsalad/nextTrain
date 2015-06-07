@@ -99,6 +99,14 @@
           $('#api-status').text('Error: ' + message + ' (' + (((response.responseJSON || {}).error || {}).message || 'Unknown reason') + ')');
         })
         .always(function () {
+          var pageHeight = $(document).height(),
+            viewportHeight = window.outerHeight;
+
+          if (viewportHeight > pageHeight ) {
+            viewportHeight = viewportHeight / window.devicePixelRatio;
+            $('body').css('height', viewportHeight + 'px');
+          }
+
           window.scrollTo(0,1); // hide address bar
         });
       }
