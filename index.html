@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+    <style>
+      .direction-outbound {
+        font-style: italic;
+        color: #ccc;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div id="api-status"></div>
+      <h5 id="service-alert"></h5>
+      <div id="trips"></div>
+    </div>
+
+    <script>
+      var interval = 30000;
+
+      function getQueryParameters() {
+        var s1 = location.search.substring(1, location.search.length).split('&'),
+          params = {}, s2, i;
+        for (i = s1.length; i--;) {
+          s2 = s1[i].split('=');
+          params[decodeURIComponent(s2[0]).toLowerCase()] = decodeURIComponent(s2[1]);
+        }
+        return params;
+      };
+
+      function buildTripMarkup(trip) {
+        var modeIcon = trip.mode === '0' ? 'fa-subway' : 'fa-bus',
+          isInboundFromReservoir = trip.mode === '3' ? trip.direction === '0' : trip.direction === '1', // TODO: make this generic for any station
+          directionIcon = isInboundFromReservoir ? 'fa-arrow-left' : 'fa-arrow-right',
+          directionStyleClass = isInboundFromReservoir ? 'direction-inbound' : 'direction-outbound',
+          time = ~~(trip.arrivesInSeconds / 60) + 'm';
+
+        return '<div class="row ' + directionStyleClass + '"><div class="col-xs-12"><i class="fa ' + modeIcon + '"></i> <i class="fa ' + directionIcon + '"></i> <span>' + trip.destination + '</span> <strong>' + time + '</strong></div></div>';
+      }
+
+      function updateTimes() {
+        var queryParams = getQueryParameters(),
+          apiKey = queryParams['api-key'],
+          station = queryParams['station'] || 'place-rsmnl',
+          url = 'http://realtime.mbta.com/developer/api/v2/predictionsbystop?api_key=' + apiKey + '&format=json&include_service_alerts=true&stop=' + station;
+
+        $.get(url)
+        .done(function (response, status) {
+          var alerts = (response.alert_headers || []).map(function (alert) {
+            return alert.effect_name + ': ' + alert.header_text;
+          });
+
+          var trips = [];
+          (response.mode || []).forEach(function (mode) {
+            (mode.route || []).forEach(function (route) {
+              (route.direction || []).forEach(function (direction) {
+                (direction.trip || []).forEach(function (trip) {
+                  trips.push({
+                    arrivesInSeconds: trip.pre_away,
+                    destination: trip.trip_headsign,
+                    direction: direction.direction_id,
+                    route: route.route_name,
+                    mode: mode.route_type,
+                    station: response.stop_name
+                  });
+                });
+              });
+            });
+          });
+
+          trips.sort(function (a, b) {
+            return a.arrivesInSeconds - b.arrivesInSeconds;
+          });
+
+          trips = trips.map(function (trip) {
+            return buildTripMarkup(trip);
+          })
+
+          $('#service-alert').text(alerts.join('<br />'));
+          $('#trips').html(trips.join(''));
+        })
+        .fail(function (response, status, message) {
+          $('#api-status').text('Error: ' + message + ' (' + (((response.responseJSON || {}).error || {}).message || 'Unknown reason') + ')');
+        });
+      }
+      setInterval(updateTimes, interval);
+      updateTimes();
+    </script>
+  </body>
+</html>
