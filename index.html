@@ -1,12 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
     <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
 
     <style>
+      body {
+        font-size: 30px;
+      }
+
       .direction-outbound {
         font-style: italic;
         color: #ccc;
@@ -17,7 +23,7 @@
   <body>
     <div class="container">
       <div id="api-status"></div>
-      <h5 id="service-alert"></h5>
+      <h2 id="service-alert"></h2>
       <div id="trips"></div>
     </div>
 
