@@ -93,6 +93,9 @@
         })
         .fail(function (response, status, message) {
           $('#api-status').text('Error: ' + message + ' (' + (((response.responseJSON || {}).error || {}).message || 'Unknown reason') + ')');
+        })
+        .always(function () {
+          window.scrollTo(0,1); // hide address bar
         });
       }
       setInterval(updateTimes, interval);
